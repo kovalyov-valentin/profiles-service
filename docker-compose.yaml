@@ -1,0 +1,12 @@
+version: "4.2"
+services:
+  postgres:
+    image: postgres:14.7-alpine
+    restart: on-failure
+    container_name: profiles-service
+    environment:
+      POSTGRES_DB: "profilesdb"
+      POSTGRES_USER: "mobile"
+      POSTGRES_PASSWORD: "password"
+    ports:
+      - "5040:5432"
