@@ -1,9 +1,9 @@
-CREATE TABLE IF NOT EXISTS profiles (
-    profiles_uid VARCHAR(255) PRIMARY KEY NOT NULL,
-    name VARCHAR(255),
-    surname VARCHAR(255),
+CREATE TABLE IF NOT EXISTS users (
+    id serial not null unique,
+    name VARCHAR(255) not null,
+    surname VARCHAR(255) not null,
     patronymic VARCHAR(255),
-    age VARCHAR(255),
-    gender int,
-    country VARCHAR(255)
+    age int,
+    gender VARCHAR(255),
+    nationality VARCHAR(255)
 )
