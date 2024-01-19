@@ -1,50 +1,58 @@
 package config
 
 import (
-	"log"
-	"os"
+	"github.com/joho/godotenv"
+	"github.com/kelseyhightower/envconfig"
+	"github.com/sirupsen/logrus"
 	"time"
+)
 
-	"github.com/ilyakaznacheev/cleanenv"
+const (
+	envPrefix   = ""
+	envFilePath = "configs/.env"
 )
 
 type Config struct {
-	DB         `yaml:"db"`
-	HTTPServer `yaml:"http_server"`
+	DB
+	HTTPServer
+	Api
+}
+
+type Api struct {
+	AgeUrl         string `envconfig:"AGE_URL"`
+	GenderUrl      string `envconfig:"GENDER_URL"`
+	NationalityUrl string `envconfig:"NATIONALITY_URL"`
 }
 
 type DB struct {
-	Username string `yaml:"username" env-default:"mobile"`
-	Host     string `yaml:"host" env-default:"localhost"`
-	Port     string `yaml:"port" env-default:"5040"`
-	DBName   string `yaml:"dbname" env-default:"profilesdb"`
-	Password string `yaml:"password" env-default:"password"`
-	SSLMode  string `yaml:"sslmode" env-default:"disable"`
+	Username           string `envconfig:"DB_USERNAME" default:"mobile"`
+	Host               string `envconfig:"DB_HOST" default:"localhost"`
+	Port               string `envconfig:"DB_PORT" default:"5040"`
+	DBName             string `envconfig:"DB_NAME" default:"profilesdb"`
+	Password           string `envconfig:"DB_PASSWORD" default:"password"`
+	SSLMode            string `envconfig:"DB_SSLMODE" default:"disable"`
+	DatabaseURL        string `envconfig:"DATABASE_URL" required:"true"`
+	MaxOpenConnections int    `envconfig:"DATABASE_MAX_OPEN_CONNECTIONS" default:"10"`
 }
 
 type HTTPServer struct {
-	Address     string        `yaml:"address" env-default:"localhost:8080"`
-	Timeout     time.Duration `yaml:"timeout" env-default:"4s"`
-	IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"60s"`
-	CtxTimeout  time.Duration `yaml:"ctx_timeout" env-default:"60s"`
+	Address     string        `envconfig:"HTTP_SERVER_ADDRESS" default:"localhost:8080"`
+	Timeout     time.Duration `envconfig:"HTTP_SERVER_TIMEOUT" default:"4s"`
+	IdleTimeout time.Duration `envconfig:"HTTP_SERVER_CTX_TIMEOUT" default:"60s"`
+	CtxTimeout  time.Duration `envconfig:"HTTP_SERVER_IDLE_TIMEOUT" default:"60s"`
 }
 
-// export CONFIG_PATH="configs/config.yaml
-
 func MustLoad() *Config {
-	configPath := os.Getenv("CONFIG_PATH")
-	if configPath == "" {
-		log.Fatal("CONFIG_PATH is not set")
+	if err := godotenv.Load(envFilePath); err != nil {
+		logrus.Fatalf("Error loading .env file: %s", err)
 	}
-
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		log.Fatalf("config file does not exists: %s", configPath)
-	}
-
 	var cfg Config
-	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
-		log.Fatalf("cannot read config: %s", err)
+	err := envconfig.Process(envPrefix, &cfg)
+	if err != nil {
+		logrus.Fatalf("Error filling in the structure: %s", err)
+		return nil
 	}
 
+	logrus.Printf("DatabaseURL: %s\n", cfg.DatabaseURL)
 	return &cfg
 }
