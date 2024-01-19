@@ -21,6 +21,9 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), cfg.CtxTimeout)
 	defer cancel()
 
+	logrus.SetLevel(logrus.DebugLevel)
+	logrus.Debug("DEBUG messages are enabled")
+
 	db, err := repository.NewPostgresDB(cfg.DB)
 	if err != nil {
 		logrus.Fatalf("failes to connect postgres db: %s", err.Error())
@@ -28,8 +31,8 @@ func main() {
 	defer db.Close()
 
 	repos := repository.NewRepository(db)
-	services := service.NewService(repos)
-	handlers := handler.NewHandler(services)
+	services := service.NewService(repos, cfg)
+	handlers := handler.NewHandler(services, cfg)
 
 	srv := new(internal.Server)
 
@@ -50,11 +53,10 @@ func main() {
 		logrus.Printf("error starting server: %v\n", err)
 	case <-osSignal:
 		logrus.Println("start shutdown...")
-		//ctx, cancel := context.WithTimeout(context.Background(), cfg.CtxTimeout)
-		//defer cancel()
 		if err := srv.Shutdown(ctx); err != nil {
 			logrus.Printf("graceful shutdown error: %v\n", err)
 			os.Exit(1)
 		}
 	}
+	logrus.Info("server stopped")
 }
