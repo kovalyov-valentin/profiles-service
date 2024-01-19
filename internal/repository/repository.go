@@ -1,16 +1,25 @@
 package repository
 
-import "github.com/jmoiron/sqlx"
+import (
+	"context"
+	"github.com/jmoiron/sqlx"
+	"github.com/kovalyov-valentin/profiles-service/internal/models"
+)
 
-type ProfileServicer interface {
+type UserServicer interface {
+	CreateUser(ctx context.Context, user models.Users) (int, error)
+	GetUser(ctx context.Context, id int) (models.Users, error)
+	GetUsers(ctx context.Context) ([]models.Users, error)
+	UpdateUser(ctx context.Context, id int, user models.Users) error
+	DeleteUser(ctx context.Context, id int) error
 }
 
 type Repository struct {
-	ProfileServicer
+	UserServicer
 }
 
 func NewRepository(db *sqlx.DB) *Repository {
 	return &Repository{
-		ProfileServicer: NewProfilePostgres(db),
+		UserServicer: NewUserPostgres(db),
 	}
 }
